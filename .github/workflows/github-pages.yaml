@@ -1,7 +1,15 @@
 name: GitHub Pages
-run-name: Build and deploy GitHub pages
+run-name: Build with Next.js and deploy to GitHub pages
 on:
-  page_build:
+  push:
+    branches: ['main']
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -18,10 +26,28 @@ jobs:
     - name: Install pnpm
       run: npm i -g pnpm
 
-    - name: Build and export static site
+    - name: Setup GitHub Pages
+      uses: actions/configure-pages@v5
+      with:
+        static_site_generator: next
+
+    - name: Restore cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          .next/cache
+        key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+        # If source files changed but packages didn't, rebuild from a prior cache.
+        restore-keys: |
+          ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Build with Next.js
       run: pnpm build
 
-    - name: Upload GitHub pages
+    - name: Upload artifact
       uses: actions/upload-pages-artifact@v3 
       with:
         path: dist/
@@ -29,9 +55,6 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
