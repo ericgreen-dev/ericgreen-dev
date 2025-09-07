@@ -1,5 +1,5 @@
 name: GitHub Pages
-
+run-name: Build and deploy GitHub pages
 on:
   page_build:
 
@@ -7,13 +7,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout source code
+      uses: actions/checkout@v5
+
     - name: Setup Node.js
       uses: actions/setup-node@v5
       with:
         node-version-file: .nvmrc
-
-    - name: Checkout source code
-      uses: actions/checkout@v5
 
     - name: Install pnpm
       run: npm i -g pnpm
